@@ -1,0 +1,40 @@
+# depslib dependency file v1.0
+1763579329 source:c:\users\aunil\onedrive\documents\semester 3\std\tubes_kel_03\history.cpp
+	"history.h"
+	<iostream>
+
+1763579311 c:\users\aunil\onedrive\documents\semester 3\std\tubes_kel_03\history.h
+	"library.h"
+
+1763579204 c:\users\aunil\onedrive\documents\semester 3\std\tubes_kel_03\library.h
+	<iostream>
+	<string>
+
+1763580495 source:c:\users\aunil\onedrive\documents\semester 3\std\tubes_kel_03\main.cpp
+	<iostream>
+	<string>
+	<cstdlib>
+	<ctime>
+	"library.h"
+	"playlist.h"
+	"history.h"
+
+1763579286 c:\users\aunil\onedrive\documents\semester 3\std\tubes_kel_03\playlist.h
+	"library.h"
+
+1765030125 source:c:\users\aunil\onedrive\documents\semester 3\std\tubes_kel_03\library.cpp
+	"library.h"
+
+1763579277 source:c:\users\aunil\onedrive\documents\semester 3\std\tubes_kel_03\playlist.cpp
+	"playlist.h"
+	<iostream>
+
+1765032838 source:c:\users\aunil\onedrive\documents\semester 3\std\tubes_kel_03\favorites.cpp
+	"favorites.h"
+	<iostream>
+	<algorithm>
+
+1765032869 c:\users\aunil\onedrive\documents\semester 3\std\tubes_kel_03\favorites.h
+	"library.h"
+	<vector>
+
