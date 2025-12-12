@@ -66,7 +66,7 @@ void removeFromPlaylistByNode(Playlist &Q, address node) {
     while (i <= Q.tail) {
         if (Q.data[i] == node) {
             // shift left from i
-            for (int j = i; j < Q.tail; j++) Q.data[j] = Q.data[j+1];
+            for (int j = i; j < Q.tail; j++) Q.data[j] = Q.data[j + 1];
             Q.data[Q.tail] = NULL;
             Q.tail--;
         } else {
