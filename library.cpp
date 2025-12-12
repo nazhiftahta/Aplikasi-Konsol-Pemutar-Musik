@@ -11,6 +11,7 @@ bool isEmpty(List L) {
 
 void insertSorted(List &L, infotype lagu) {
     address P = new Node;
+    lagu.playCount = 0;
     P->info = lagu;
     P->next = NULL;
     P->prev = NULL;
