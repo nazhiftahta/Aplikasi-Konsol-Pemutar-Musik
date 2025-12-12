@@ -20,5 +20,4 @@ void dequeue(Playlist &Q);
 void showPlaylist(Playlist Q);
 void removeFromPlaylistByNode(Playlist &Q, address node);
 int findIndexInPlaylist(Playlist Q, address node);
-
 #endif
