@@ -11,6 +11,7 @@ struct Song {
     string artist;
     string genre;
     int year;
+    int playCount;
 };
 
 typedef Song infotype;
