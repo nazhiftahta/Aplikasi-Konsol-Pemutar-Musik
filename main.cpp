@@ -1,3 +1,4 @@
+// main.cpp
 #include <iostream>
 #include <string>
 #include <cstdlib>
@@ -6,13 +7,15 @@
 #include "library.h"
 #include "playlist.h"
 #include "history.h"
+#include "favorites.h"
 
 using namespace std;
 
-void adminMenu(List &library, Playlist &playlist, History &history);
-void userMenu(List &library, Playlist &playlist, History &history);
+void adminMenu(List &library, Playlist &playlist, History &history, FavoriteBST &favorites); // Perbarui parameter
+void userMenu(List &library, Playlist &playlist, History &history, FavoriteBST &favorites);   // Perbarui parameter
 
-void removeFromAllPlaylistsAndHistory(Playlist &playlist, History &history, address node);
+void removeFromAllPlaylistsAndHistory(Playlist &playlist, History &history, FavoriteBST &favorites, address node); // Perbarui parameter
+void updatePlayCountAndFavorite(FavoriteBST &favorites, address songNode); // Fungsi baru
 
 address findSimilarSong(List &library, address lastPlayed);
 
@@ -21,12 +24,14 @@ int main() {
     List library;
     Playlist playlist;
     History history;
+    FavoriteBST favorites; // Inisialisasi BST baru
 
     createList(library);
     createPlaylist(playlist);
     createHistory(history);
+    createFavoriteBST(favorites); // Buat BST
 
-
+    // Inisialisasi lagu dengan playCount = 0 (sudah di library.cpp)
     insertSorted(library, {1, "Fix You", "Coldplay", "Pop", 2005});
     insertSorted(library, {2, "Bohemian Rhapsody", "Queen", "Rock", 1975});
     insertSorted(library, {3, "Shape of You", "Ed Sheeran", "Pop", 2017});
@@ -51,12 +56,12 @@ int main() {
         getline(cin, password);
 
         if (password == "Kelompok 3") {
-            adminMenu(library, playlist, history);
+            adminMenu(library, playlist, history, favorites); // Perbarui
         } else {
             cout << "Password salah. Akses ditolak.\n";
         }
     } else if (role == 2) {
-        userMenu(library, playlist, history);
+        userMenu(library, playlist, history, favorites); // Perbarui
     } else {
         cout << "Pilihan tidak valid. Program keluar.\n";
     }
@@ -65,8 +70,22 @@ int main() {
     return 0;
 }
 
+void updatePlayCountAndFavorite(FavoriteBST &favorites, address songNode) {
+    if (songNode == NULL) return;
+
+    // Hapus dari BST lama (berdasarkan playCount lama)
+    deleteFavorite(favorites, songNode);
+
+    // Tambahkan playCount
+    songNode->info.playCount++;
+
+    // Masukkan kembali ke BST dengan playCount baru
+    insertFavorite(favorites, songNode);
+}
+
+
 // --------------------------- ADMIN MENU ---------------------------
-void adminMenu(List &library, Playlist &playlist, History &history) {
+void adminMenu(List &library, Playlist &playlist, History &history, FavoriteBST &favorites) { // Perbarui
     int pilih;
     do {
         cout << "\n=== MENU ADMIN ===\n";
@@ -100,6 +119,9 @@ void adminMenu(List &library, Playlist &playlist, History &history) {
             if (node == NULL) {
                 cout << "Lagu tidak ditemukan.\n";
             } else {
+                // Hapus dari BST sebelum update (karena playCount tetap)
+                deleteFavorite(favorites, node);
+
                 infotype s = node->info;
                 cout << "Data lama: " << s.id << " | " << s.title << " | " << s.artist << endl;
                 cout << "Masukkan data baru (kosongkan untuk tidak mengubah):\n";
@@ -108,7 +130,12 @@ void adminMenu(List &library, Playlist &playlist, History &history) {
                 cout << "Artist (" << s.artist << "): "; getline(cin, tmp); if (!tmp.empty()) s.artist = tmp;
                 cout << "Genre (" << s.genre << "): "; getline(cin, tmp); if (!tmp.empty()) s.genre = tmp;
                 cout << "Tahun (" << s.year << "): "; getline(cin, tmp); if (!tmp.empty()) s.year = stoi(tmp);
+                // Kita tidak perlu update playCount di sini karena tidak diubah oleh Admin.
                 updateSongByID(library, id, s);
+
+                // Masukkan kembali ke BST (karena playCount yang dipertahankan tetap sama)
+                insertFavorite(favorites, node);
+
                 cout << "Data lagu berhasil diperbarui. Perubahan otomatis tercermin di playlist & history.\n";
             }
         }
@@ -120,17 +147,16 @@ void adminMenu(List &library, Playlist &playlist, History &history) {
             if (node == NULL) {
                 cout << "Lagu tidak ditemukan.\n";
             } else {
-                removeFromAllPlaylistsAndHistory(playlist, history, node);
-                deleteByTitle(library, judul);
-                cout << "Lagu dihapus dari library dan semua playlist/history diupdate.\n";
+                removeFromAllPlaylistsAndHistory(playlist, history, favorites, node); // Perbarui
+                deleteByTitle(library, judul); // Ini harus membebaskan memory
+                cout << "Lagu dihapus dari library dan semua playlist/history/favorit diupdate.\n";
             }
         }
-
     } while (pilih != 0);
 }
 
 // --------------------------- USER MENU ---------------------------
-void userMenu(List &library, Playlist &playlist, History &history) {
+void userMenu(List &library, Playlist &playlist, History &history, FavoriteBST &favorites) { // Perbarui
     int pilih;
     bool isPlaying = false;
     address nowPlaying = NULL;
@@ -139,17 +165,19 @@ void userMenu(List &library, Playlist &playlist, History &history) {
         cout << "\n=== MENU USER ===\n";
         cout << "1. Cari lagu\n";
         cout << "2. Tambah lagu ke Playlist\n";
-        cout << "3. Hapus Lagu dari Playlist (dequeue)\n";
+        cout << "3. Hapus Lagu dari Playlist\n";
         cout << "4. Putar / Stop lagu\n";
         cout << "5. Next Lagu\n";
         cout << "6. Prev Lagu\n";
         cout << "7. Tampilkan Playlist\n";
         cout << "8. Tampilkan History\n";
+        cout << "9. Tampilkan Lagu Favorit\n"; // Tambah menu
         cout << "0. Keluar\n";
         cout << "Pilih: ";
         cin >> pilih;
         cin.ignore();
 
+        // ... (Logika cari lagu tetap sama)
         if (pilih == 1) {
             cout << "Cari berdasarkan:\n";
             cout << "1. ID\n";
@@ -157,47 +185,48 @@ void userMenu(List &library, Playlist &playlist, History &history) {
             cout << "3. Artist\n";
             cout << "4. Genre\n";
             cout << "5. Tahun\n";
-            cout << "\nPilahan: ";
-            string t; cin >> t; cin.ignore();
-            if (t == "ID") {
+            cout << "\nPilihan: ";
+            string t; getline(cin, t); // Pindah cin >> t; cin.ignore(); menjadi getline(cin, t)
+
+            if (t == "1" || t == "ID") {
                 int id; cout << "Masukkan ID: "; cin >> id; cin.ignore();
                 address n = findByIDNode(library, id);
-                if (n) cout << n->info.id << " | " << n->info.title << " | " << n->info.artist << endl;
+                if (n) cout << n->info.id << " | " << n->info.title << " | " << n->info.artist << " | Plays: " << n->info.playCount << endl;
                 else cout << "Tidak ditemukan.\n";
-            } else if (t == "Judul") {
+            } else if (t == "2" || t == "Judul") {
                 string judul; cout << "Masukkan Judul: "; getline(cin, judul);
                 address n = findByTitleNode(library, judul);
-                if (n) cout << n->info.id << " | " << n->info.title << " | " << n->info.artist << endl;
+                if (n) cout << n->info.id << " | " << n->info.title << " | " << n->info.artist << " | Plays: " << n->info.playCount << endl;
                 else cout << "Tidak ditemukan.\n";
-            } else if (t == "Artist") {
+            } else if (t == "3" || t == "Artist") {
                 string art; cout << "Masukkan Artist: "; getline(cin, art);
                 address p = library.first;
                 bool found=false;
                 while (p) {
                     if (p->info.artist == art) {
-                        cout << p->info.id << " | " << p->info.title << " | " << p->info.artist << endl;
+                        cout << p->info.id << " | " << p->info.title << " | " << p->info.artist << " | Plays: " << p->info.playCount << endl;
                         found=true;
                     }
                     p=p->next;
                 }
                 if (!found) cout << "Tidak ditemukan.\n";
-            } else if (t == "Genre") {
+            } else if (t == "4" || t == "Genre") {
                 string g; cout << "Masukkan Genre: "; getline(cin, g);
                 address p = library.first; bool found=false;
                 while (p) {
                     if (p->info.genre == g) {
-                        cout << p->info.id << " | " << p->info.title << " | " << p->info.artist << endl;
+                        cout << p->info.id << " | " << p->info.title << " | " << p->info.artist << " | Plays: " << p->info.playCount << endl;
                         found=true;
                     }
                     p=p->next;
                 }
                 if (!found) cout << "Tidak ditemukan.\n";
-            } else if (t == "Tahun") {
+            } else if (t == "5" || t == "Tahun") {
                 int thn; cout << "Masukkan Tahun: "; cin >> thn; cin.ignore();
                 address p = library.first; bool found=false;
                 while (p) {
                     if (p->info.year == thn) {
-                        cout << p->info.id << " | " << p->info.title << " | " << p->info.artist << endl;
+                        cout << p->info.id << " | " << p->info.title << " | " << p->info.artist << " | Plays: " << p->info.playCount << endl;
                         found=true;
                     }
                     p=p->next;
@@ -207,6 +236,7 @@ void userMenu(List &library, Playlist &playlist, History &history) {
                 cout << "\nPilihan anda tidak valid, silahkan coba lagi!\n";
             }
         }
+        // ... (Logika enqueue, dequeue tetap sama)
         else if (pilih == 2) {
             cout << "Masukkan judul lagu untuk ditambahkan ke playlist: ";
             string judul; getline(cin, judul);
@@ -217,6 +247,7 @@ void userMenu(List &library, Playlist &playlist, History &history) {
         else if (pilih == 3) {
             dequeue(playlist);
         }
+        // ... (Logika Putar/Stop, Next, Prev, Tampilkan tetap sama, dengan penambahan updatePlayCountAndFavorite)
         else if (pilih == 4) {
             if (!isPlaying) {
                 if (!isQueueEmpty(playlist)) {
@@ -224,6 +255,7 @@ void userMenu(List &library, Playlist &playlist, History &history) {
                     nowPlayingPlaylistIndex = playlist.head;
                     cout << "Now Playing: " << nowPlaying->info.title << " - " << nowPlaying->info.artist << endl;
                     push(history, nowPlaying);
+                    updatePlayCountAndFavorite(favorites, nowPlaying); // UPDATE PLAY COUNT & FAVORIT
                     dequeue(playlist);
                     isPlaying = true;
                 } else {
@@ -237,6 +269,7 @@ void userMenu(List &library, Playlist &playlist, History &history) {
                             nowPlayingPlaylistIndex = 0;
                             cout << "Now Playing: " << nowPlaying->info.title << " - " << nowPlaying->info.artist << endl;
                             push(history, nowPlaying);
+                            updatePlayCountAndFavorite(favorites, nowPlaying); // UPDATE PLAY COUNT & FAVORIT
                             isPlaying = true;
                         } else {
                             cout << "Lagu tidak ditemukan.\n";
@@ -257,6 +290,7 @@ void userMenu(List &library, Playlist &playlist, History &history) {
                         nowPlayingPlaylistIndex = playlist.head;
                         cout << "Now Playing (Next): " << nowPlaying->info.title << " - " << nowPlaying->info.artist << endl;
                         push(history, nowPlaying);
+                        updatePlayCountAndFavorite(favorites, nowPlaying); // UPDATE PLAY COUNT & FAVORIT
                         dequeue(playlist);
                         isPlaying = true;
                     } else {
@@ -271,6 +305,7 @@ void userMenu(List &library, Playlist &playlist, History &history) {
                         nowPlaying = sim;
                         cout << "Now Playing (Next similar): " << nowPlaying->info.title << " - " << nowPlaying->info.artist << endl;
                         push(history, nowPlaying);
+                        updatePlayCountAndFavorite(favorites, nowPlaying); // UPDATE PLAY COUNT & FAVORIT
                         isPlaying = true;
                         nowPlayingPlaylistIndex = 0;
                     } else {
@@ -286,6 +321,7 @@ void userMenu(List &library, Playlist &playlist, History &history) {
                             nowPlaying = p;
                             cout << "Now Playing (Random fallback): " << nowPlaying->info.title << " - " << nowPlaying->info.artist << endl;
                             push(history, nowPlaying);
+                            updatePlayCountAndFavorite(favorites, nowPlaying); // UPDATE PLAY COUNT & FAVORIT
                             isPlaying = true;
                             nowPlayingPlaylistIndex = 0;
                         }
@@ -299,14 +335,19 @@ void userMenu(List &library, Playlist &playlist, History &history) {
             if (isStackEmpty(history) || history.top < 2) {
                 cout << "Tidak ada lagu sebelumnya.\n";
             } else {
-                address current = peekHistory(history);
-                address prev = history.data[history.top - 1];
+                // Jangan panggil peekHistory, ambil 2 dari atas untuk "balik"
+                // Pop lagu yang sedang diputar (yang terakhir didorong)
+                pop(history);
+                address prev = peekHistory(history);
                 if (prev) {
                     nowPlaying = prev;
                     cout << "Now Playing (Previous): " << nowPlaying->info.title << " - " << nowPlaying->info.artist << endl;
+                    // Tidak perlu push atau update playCount lagi karena sudah ada di history
                     isPlaying = true;
                     nowPlayingPlaylistIndex = 0;
                 } else {
+                    // Jika setelah pop stack kosong, reset nowPlaying
+                    nowPlaying = NULL;
                     cout << "Tidak ada lagu sebelumnya.\n";
                 }
             }
@@ -317,22 +358,34 @@ void userMenu(List &library, Playlist &playlist, History &history) {
         else if (pilih == 8) {
             showHistory(history);
         }
+        else if (pilih == 9) { // Menu baru
+            displayFavoriteSongs(favorites);
+        }
 
     } while (pilih != 0);
 }
 
-void removeFromAllPlaylistsAndHistory(Playlist &playlist, History &history, address node) {
+void removeFromAllPlaylistsAndHistory(Playlist &playlist, History &history, FavoriteBST &favorites, address node) { // Perbarui
     removeFromPlaylistByNode(playlist, node);
     removeFromHistoryByNode(history, node);
+    deleteFavorite(favorites, node); // Hapus dari BST favorit
 }
 
 address findSimilarSong(List &library, address lastPlayed) {
     if (lastPlayed == NULL) return NULL;
+    // Cari yang genre dan artist sama (diutamakan)
     address p = library.first;
+    while (p) {
+        if (p != lastPlayed && p->info.artist == lastPlayed->info.artist && p->info.genre == lastPlayed->info.genre) return p;
+        p = p->next;
+    }
+    // Cari yang artist sama
+    p = library.first;
     while (p) {
         if (p != lastPlayed && p->info.artist == lastPlayed->info.artist) return p;
         p = p->next;
     }
+    // Cari yang genre sama
     p = library.first;
     while (p) {
         if (p != lastPlayed && p->info.genre == lastPlayed->info.genre) return p;
