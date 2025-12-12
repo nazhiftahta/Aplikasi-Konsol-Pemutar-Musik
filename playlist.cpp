@@ -41,7 +41,7 @@ void dequeue(Playlist &Q) {
         Q.head = Q.tail = 0;
     } else {
         for (int i = Q.head; i < Q.tail; i++)
-            Q.data[i] = Q.data[i + 1];
+            Q.data[i] = Q.data[i+1];
         Q.data[Q.tail] = NULL;
         Q.tail--;
     }
