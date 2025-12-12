@@ -54,7 +54,7 @@ void removeFromHistoryByNode(History &S, address node) {
             S.data[write] = S.data[read];
         }
     }
-    for (int k = write+1; k <= S.top; k++) S.data[k] = NULL;
+    for (int k = write + 1; k <= S.top; k++) S.data[k] = NULL;
     S.top = write;
 }
 
