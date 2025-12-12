@@ -19,5 +19,4 @@ void pop(History &S);
 void showHistory(History S);
 void removeFromHistoryByNode(History &S, address node);
 address peekHistory(History S);
-
 #endif
