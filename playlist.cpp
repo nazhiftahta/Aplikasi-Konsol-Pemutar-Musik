@@ -41,7 +41,7 @@ void dequeue(Playlist &Q) {
         Q.head = Q.tail = 0;
     } else {
         for (int i = Q.head; i < Q.tail; i++)
-            Q.data[i] = Q.data[i+1];
+            Q.data[i] = Q.data[i + 1];
         Q.data[Q.tail] = NULL;
         Q.tail--;
     }
@@ -61,18 +61,26 @@ void showPlaylist(Playlist Q) {
 }
 
 void removeFromPlaylistByNode(Playlist &Q, address node) {
-    if (isQueueEmpty(Q)) return;
+    if (isQueueEmpty(Q)) {
+        return;
+    }
+
     int i = Q.head;
     while (i <= Q.tail) {
         if (Q.data[i] == node) {
-            // shift left from i
-            for (int j = i; j < Q.tail; j++) Q.data[j] = Q.data[j + 1];
+            for (int j = i; j < Q.tail; j++) {
+                Q.data[j] = Q.data[j + 1];
+            }
             Q.data[Q.tail] = NULL;
             Q.tail--;
+
+            if (Q.tail < Q.head) {
+                Q.head = 0;
+                Q.tail = 0;
+            }
         } else {
             i++;
         }
-        if (Q.head > Q.tail) { Q.head = Q.tail = 0; break; }
     }
 }
 
