@@ -43,29 +43,40 @@ int main() {
     insertSorted(library, {9, "Faded", "Alan Walker", "EDM", 2015});
     insertSorted(library, {10,"Sugar", "Maroon 5", "Pop", 2015});
 
-    cout << "=== SELAMAT DATANG DI NODEBEAT ===\n";
-    cout << "Pilih peran:\n1. Admin\n2. User\nPilih: ";
     int role;
-    cin >> role;
-    cin.ignore();
+    do {
+        cout << "\n=== SELAMAT DATANG DI NODEBEAT ===\n";
+        cout << "Pilih peran:\n";
+        cout << "1. Admin\n";
+        cout << "2. User\n";
+        cout << "0. Keluar Program\n";
+        cout << "Pilih: ";
+        cin >> role;
+        cin.ignore();
 
-    if (role == 1) {
+        if (role == 1) {
+            string password;
+            cout << "Masukkan password Admin: ";
+            getline(cin, password);
 
-        string password;
-        cout << "Masukkan password Admin: ";
-        getline(cin, password);
-
-        if (password == "Kelompok 3") {
-            adminMenu(library, playlist, history, favorites); // Perbarui
-        } else {
-            cout << "Password salah. Akses ditolak.\n";
+            if (password == "Kelompok 3") {
+                adminMenu(library, playlist, history, favorites);
+            } else {
+                cout << "Password salah. Akses ditolak.\n";
+            }
         }
-    } else if (role == 2) {
-        userMenu(library, playlist, history, favorites); // Perbarui
-    } else {
-        cout << "Pilihan tidak valid. Program keluar.\n";
-    }
+        else if (role == 2) {
+            userMenu(library, playlist, history, favorites);
+        }
+        else if (role == 0) {
+            cout << "\nTerima kasih telah menggunakan NODEBEAT 🎵\n";
+        }
+        else {
+            cout << "Pilihan tidak valid.\n";
+        }
 
+    } while (role != 0);
+    
     cout << "\nProgram selesai.\n";
     return 0;
 }
